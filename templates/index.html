@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Stock Predictor - Smart Investment Recommendations</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0e27;
+            color: #e0e6ed;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .sector-tabs {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .sector-tab {
+            background: #1a2332;
+            border: 1px solid #2a3f5f;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+        }
+
+        .sector-tab:hover {
+            background: #2a3f5f;
+            transform: translateY(-2px);
+        }
+
+        .sector-tab.active {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+
+        .market-overview {
+            background: #1a2332;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #0d1929;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #2a3f5f;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .stocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stock-card {
+            background: #1a2332;
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #2a3f5f;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stock-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: #3a7bd5;
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stock-symbol {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .stock-name {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .price-info {
+            text-align: right;
+        }
+
+        .current-price {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .price-change {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .positive {
+            color: #00d2ff;
+        }
+
+        .negative {
+            color: #ff4757;
+        }
+
+        .recommendation {
+            background: #0d1929;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .recommendation-action {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .buy {
+            color: #00d2ff;
+        }
+
+        .sell {
+            color: #ff4757;
+        }
+
+        .hold {
+            color: #ffa502;
+        }
+
+        .confidence-bar {
+            background: #0d1929;
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            transition: width 0.5s ease;
+        }
+
+        .indicators {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .indicator {
+            background: #0d1929;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .indicator-label {
+            opacity: 0.7;
+        }
+
+        .indicator-value {
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #1a2332;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 900px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            height: 400px;
+            position: relative;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            opacity: 0.7;
+        }
+
+        .error-message {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid #ff4757;
+            color: #ff4757;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 210, 255, 0.4);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stock-card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .sector-tabs {
+                gap: 5px;
+            }
+
+            .sector-tab {
+                padding: 10px 15px;
+                font-size: 0.85em;
+            }
+
+            .stocks-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>AI Stock Predictor</h1>
+            <p class="tagline">Intelligent Buy, Sell & Hold Recommendations Powered by Machine Learning</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="market-overview" id="marketOverview">
+            <h2>Market Overview</h2>
+            <div class="overview-stats" id="overviewStats">
+                <div class="stat-card">
+                    <div class="stat-label">Market Sentiment</div>
+                    <div class="stat-value" id="marketSentiment">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Buy Signals</div>
+                    <div class="stat-value positive" id="buySignals">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sell Signals</div>
+                    <div class="stat-value negative" id="sellSignals">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Top Recommendation</div>
+                    <div class="stat-value" id="topRecommendation">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sector-tabs" id="sectorTabs">
+            <!-- Dynamically populated -->
+        </div>
+
+        <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+
+        <div id="stocksContainer">
+            <div class="loading">Loading stocks data...</div>
+        </div>
+    </div>
+
+    <div class="modal" id="stockModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="modalContent">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSector = null;
+        let stocksData = {};
+        let stockChart = null;
+
+        // Initialize the app
+        async function init() {
+            await loadSectors();
+            await loadMarketOverview();
+        }
+
+        // Load available sectors
+        async function loadSectors() {
+            try {
+                const response = await axios.get('/api/sectors');
+                const sectors = response.data.sectors;
+                
+                const sectorTabs = document.getElementById('sectorTabs');
+                sectorTabs.innerHTML = '';
+                
+                sectors.forEach((sector, index) => {
+                    const tab = document.createElement('div');
+                    tab.className = 'sector-tab';
+                    tab.textContent = sector;
+                    tab.onclick = () => selectSector(sector);
+                    
+                    if (index === 0) {
+                        tab.classList.add('active');
+                        selectSector(sector);
+                    }
+                    
+                    sectorTabs.appendChild(tab);
+                });
+            } catch (error) {
+                console.error('Error loading sectors:', error);
+            }
+        }
+
+        // Load market overview
+        async function loadMarketOverview() {
+            try {
+                const response = await axios.get('/api/market-overview');
+                const data = response.data;
+                
+                document.getElementById('marketSentiment').textContent = data.market_sentiment.sentiment;
+                document.getElementById('buySignals').textContent = `${data.market_sentiment.buy_percentage}%`;
+                document.getElementById('sellSignals').textContent = `${data.market_sentiment.sell_percentage}%`;
+                
+                if (data.top_buys && data.top_buys.length > 0) {
+                    document.getElementById('topRecommendation').textContent = data.top_buys[0].symbol;
+                }
+            } catch (error) {
+                console.error('Error loading market overview:', error);
+            }
+        }
+
+        // Select a sector
+        function selectSector(sector) {
+            currentSector = sector;
+            
+            // Update active tab
+            document.querySelectorAll('.sector-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent === sector) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            loadSectorStocks(sector);
+        }
+
+        // Load stocks for a sector
+        async function loadSectorStocks(sector) {
+            const container = document.getElementById('stocksContainer');
+            container.innerHTML = '<div class="loading">Loading stocks data...</div>';
+            
+            try {
+                const response = await axios.get(`/api/stocks/${sector}`);
+                stocksData[sector] = response.data.stocks;
+                displayStocks(response.data.stocks);
+            } catch (error) {
+                console.error('Error loading stocks:', error);
+                container.innerHTML = '<div class="error-message">Error loading stocks data. Please try again later.</div>';
+            }
+        }
+
+        // Display stocks
+        function displayStocks(stocks) {
+            const container = document.getElementById('stocksContainer');
+            container.innerHTML = '<div class="stocks-grid" id="stocksGrid"></div>';
+            const grid = document.getElementById('stocksGrid');
+            
+            stocks.forEach((stock, index) => {
+                const card = createStockCard(stock);
+                card.style.animationDelay = `${index * 0.1}s`;
+                grid.appendChild(card);
+            });
+        }
+
+        // Create stock card
+        function createStockCard(stock) {
+            const card = document.createElement('div');
+            card.className = 'stock-card';
+            card.onclick = () => showStockDetails(stock.symbol);
+            
+            const changeClass = stock.change_percent >= 0 ? 'positive' : 'negative';
+            const changeSymbol = stock.change_percent >= 0 ? '+' : '';
+            const recommendationClass = stock.recommendation.action.includes('BUY') ? 'buy' : 
+                                      stock.recommendation.action.includes('SELL') ? 'sell' : 'hold';
+            
+            card.innerHTML = `
+                <div class="stock-header">
+                    <div>
+                        <div class="stock-symbol">${stock.symbol}</div>
+                        <div class="stock-name">${stock.name}</div>
+                    </div>
+                    <div class="price-info">
+                        <div class="current-price">$${stock.current_price.toFixed(2)}</div>
+                        <div class="price-change ${changeClass}">${changeSymbol}${stock.change_percent.toFixed(2)}%</div>
+                    </div>
+                </div>
+                
+                <div class="recommendation">
+                    <div class="recommendation-action ${recommendationClass}">${stock.recommendation.action}</div>
+                    <div>Target: $${stock.recommendation.target_price}</div>
+                    <div>Potential: ${stock.recommendation.potential_return}</div>
+                </div>
+                
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${stock.recommendation.confidence * 100}%"></div>
+                </div>
+                <div style="font-size: 0.85em; opacity: 0.7; text-align: center;">
+                    Confidence: ${(stock.recommendation.confidence * 100).toFixed(0)}%
+                </div>
+                
+                <div class="indicators">
+                    <div class="indicator">
+                        <div class="indicator-label">RSI</div>
+                        <div class="indicator-value">${stock.indicators.rsi.value.toFixed(1)}</div>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-label">Signal</div>
+                        <div class="indicator-value">${stock.indicators.signals.overall}</div>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-label">Risk</div>
+                        <div class="indicator-value">${stock.recommendation.risk_level}</div>
+                    </div>
+                    <div class="indicator">
+                        <div class="indicator-label">Trend</div>
+                        <div class="indicator-value">${stock.indicators.sma_20.trend.toUpperCase()}</div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Show detailed stock information
+        async function showStockDetails(symbol) {
+            const modal = document.getElementById('stockModal');
+            const content = document.getElementById('modalContent');
+            
+            modal.style.display = 'block';
+            content.innerHTML = '<div class="loading">Loading detailed analysis...</div>';
+            
+            try {
+                const response = await axios.get(`/api/stock/${symbol}`);
+                const data = response.data;
+                
+                content.innerHTML = `
+                    <h2>${symbol} - ${data.company_info.name}</h2>
+                    
+                    <div class="chart-container">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <h3>AI Recommendation</h3>
+                        <div class="recommendation-action ${getRecommendationClass(data.recommendation.action)}">
+                            ${data.recommendation.action}
+                        </div>
+                        <div>Confidence: ${(data.recommendation.confidence * 100).toFixed(0)}%</div>
+                        <div>${data.recommendation.consensus}</div>
+                    </div>
+                    
+                    <h3>Prediction Analysis</h3>
+                    <div class="indicators">
+                        <div class="indicator">
+                            <div class="indicator-label">1 Day Prediction</div>
+                            <div class="indicator-value">$${data.predictions['1_day'].predicted_price}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">7 Days Prediction</div>
+                            <div class="indicator-value">$${data.predictions['7_days'].predicted_price}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">30 Days Prediction</div>
+                            <div class="indicator-value">$${data.predictions['30_days'].predicted_price}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Risk/Reward Ratio</div>
+                            <div class="indicator-value">${data.recommendation.risk_reward_ratio}</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Technical Summary</h3>
+                    <div class="indicators">
+                        <div class="indicator">
+                            <div class="indicator-label">Trend</div>
+                            <div class="indicator-value">${data.recommendation.technical_summary.trend}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Momentum</div>
+                            <div class="indicator-value">${data.recommendation.technical_summary.momentum}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Volatility</div>
+                            <div class="indicator-value">${data.recommendation.technical_summary.volatility}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Volume Trend</div>
+                            <div class="indicator-value">${data.recommendation.technical_summary.volume_trend}</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Fundamental Metrics</h3>
+                    <div class="indicators">
+                        <div class="indicator">
+                            <div class="indicator-label">P/E Ratio</div>
+                            <div class="indicator-value">${data.recommendation.fundamental_metrics.pe_ratio}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Market Cap</div>
+                            <div class="indicator-value">${data.recommendation.fundamental_metrics.market_cap}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">Dividend Yield</div>
+                            <div class="indicator-value">${data.recommendation.fundamental_metrics.dividend_yield}</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-label">52-Week Position</div>
+                            <div class="indicator-value">${data.recommendation.fundamental_metrics['52_week_position']}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Create chart
+                createStockChart(data.chart_data);
+                
+            } catch (error) {
+                console.error('Error loading stock details:', error);
+                content.innerHTML = '<div class="error-message">Error loading stock details. Please try again later.</div>';
+            }
+        }
+
+        // Create stock chart
+        function createStockChart(chartData) {
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            
+            if (stockChart) {
+                stockChart.destroy();
+            }
+            
+            const dates = chartData.map(d => new Date(d.Date).toLocaleDateString());
+            const prices = chartData.map(d => d.Close);
+            
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Close Price',
+                        data: prices,
+                        borderColor: '#00d2ff',
+                        backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e6ed',
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e0e6ed',
+                                callback: function(value) {
+                                    return '$' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Get recommendation class
+        function getRecommendationClass(action) {
+            if (action.includes('BUY')) return 'buy';
+            if (action.includes('SELL')) return 'sell';
+            return 'hold';
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('stockModal').style.display = 'none';
+            if (stockChart) {
+                stockChart.destroy();
+                stockChart = null;
+            }
+        }
+
+        // Refresh data
+        async function refreshData() {
+            await loadMarketOverview();
+            if (currentSector) {
+                await loadSectorStocks(currentSector);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('stockModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Initialize on load
+        window.onload = init;
+    </script>
+</body>
+</html> 

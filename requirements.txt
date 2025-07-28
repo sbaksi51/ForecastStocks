@@ -1,0 +1,26 @@
+# Core dependencies
+flask==3.0.0
+flask-cors==4.0.0
+
+# Data processing and analysis  
+pandas
+numpy
+yfinance
+pandas-ta
+
+# Machine Learning - simplified for demo
+scikit-learn
+joblib
+
+# Visualization
+plotly
+matplotlib
+
+# API and web scraping
+requests
+beautifulsoup4
+
+# Utilities
+python-dotenv
+schedule
+pytz

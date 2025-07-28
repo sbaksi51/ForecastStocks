@@ -8,19 +8,59 @@ numpy
 yfinance
 pandas-ta
 
-# Machine Learning - simplified for demo
+# Machine Learning - Core
 scikit-learn
 joblib
+
+# Deep Learning
+tensorflow
+keras
+torch
+transformers
+
+# Time Series Analysis
+statsmodels
+prophet
+arch
+
+# Quantitative Finance
+zipline-reloaded
+pyfolio-reloaded
+alphalens-reloaded
+empyrical
+cvxpy
+
+# NLP and Sentiment Analysis
+nltk
+textblob
+vaderSentiment
+newsapi-python
+
+# API Integrations
+openai
+anthropic
+google-generativeai
+tweepy
+praw  # Reddit API
+requests
+beautifulsoup4
 
 # Visualization
 plotly
 matplotlib
+seaborn
 
-# API and web scraping
-requests
-beautifulsoup4
+# Database
+sqlalchemy
+redis
 
 # Utilities
 python-dotenv
 schedule
 pytz
+tqdm
+backtrader
+
+# Additional dependencies
+scipy
+statsmodels
